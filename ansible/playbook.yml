@@ -1,0 +1,83 @@
+---
+- hosts: DB
+  remote_user: ubuntu
+  become: yes
+  tasks:
+    - name: Add MongoDB GPG key
+      apt_key:
+        url: https://www.mongodb.org/static/pgp/server-6.0.asc
+        state: present
+
+    - name: Add MongoDB repository
+      apt_repository:
+        repo: "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu {{ ansible_distribution_release }}/mongodb-org/6.0 multiverse"
+        state: present
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install MongoDB
+      apt:
+        name: mongodb-org
+        state: present
+
+    - name: Start and enable MongoDB service
+      systemd:
+        name: mongod
+        enabled: yes
+        state: started
+
+
+
+- hosts: web 
+  remote_user: ubuntu
+  become: yes
+
+  tasks:
+    - name: Ensure dependencies are installed (curl, bash)
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - curl
+        - bash
+
+    - name: Download and install NVM
+      shell: |
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+      args:
+        creates: ~/.nvm/nvm.sh
+
+    - name: Source NVM from ~/.bashrc (so it is available in current session)
+      shell: source ~/.bashrc
+      args:
+        executable: /bin/bash
+
+    - name: Install Node.js via NVM
+      shell: |
+        source ~/.bashrc
+        nvm install node
+      args:
+        executable: /bin/bash
+
+    - name: Verify Node.js installation
+      shell: |
+        source ~/.bashrc
+        node -v
+      register: node_version_output
+
+    - debug:
+        msg: "Installed Node.js version: {{ node_version_output.stdout }}"
+   
+    - name: Install Git (if not already installed)
+      package:
+        name: git
+        state: present
+
+    - name: Clone the backend repository
+      git:
+        repo: "https://github.com/mohamed00mamdouh/depiProject.git"
+        dest: ./clonerepo
+        version: main
+        force: yes
