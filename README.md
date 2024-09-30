@@ -5,4 +5,4 @@ This repository contains the depi-project, a project designed to implement and m
 * Infrastructure as Code (IaC): Uses Terraform to manage AWS infrastructure in a version-controlled manner.
 * AWS Integration: Automates the creation and management of EC2 instances and other AWS resources.
 * CI/CD Pipeline Ready: The repository is structured to integrate seamlessly with Jenkins, making it suitable for automated deployments.
-* Customizable Configurations: Users can customize infrastructure parameters such as AMI IDs, instance types, and allowed CIDR blocks.
+*Customizable Configurations: Users can customize infrastructure parameters such as AMI IDs, instance types, and allowed CIDR blocks.
