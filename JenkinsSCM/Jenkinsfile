@@ -1,0 +1,71 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'GIT_REPO', defaultValue: 'https://github.com/Youssef292/3-Tire-Architecture-Aws-Infrastructer.git', description: 'URL of the GitHub repository')
+        string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build from')
+        string(name: 'AMI_ID', defaultValue: 'ami-0ebfd941bbafe70c6', description: 'AMI ID for the EC2 instance')
+        string(name: 'instance_type', defaultValue: 't2.micro', description: 'EC2 Instance Type')
+        string(name: 'jenkins_allowed_cidr_blocks', defaultValue: '0.0.0.0/0', description: 'CIDR block allowed for Jenkins access')
+        string(name: 'aws_region', defaultValue: 'us-east-1', description: 'EC2 Instance Type')
+    }
+       environment {
+        // Define the variables to store GitHub credentials and other values
+        GIT_CREDENTIALS_ID = 'github_credential' // Replace this with your actual credentials ID
+    }
+
+    stages {
+      stage('Checkout') {
+    steps {
+        sh 'git clone https://github.com/Youssef292/3-Tire-Architecture-Aws-Infrastructer-.git'
+
+    }
+}
+
+
+        stage('Modify tfvars') {
+            steps {
+                
+                script {
+                    sh 'cd /var/lib/jenkins/workspace/pipeline/depi-project/3-Tire-Architecture-Aws-Infrastructer-'
+                    // Create or modify the terraform.tfvars file
+                    def tfvarsContent = """
+                    ami_id = "${params.aws_region}"
+                    aws_region = "${params.AMI_ID}"
+                    instance_type = "${params.instance_type}"
+                    jenkins_allowed_cidr_blocks = ["${params.jenkins_allowed_cidr_blocks}"]
+                    """
+                    writeFile file: 'terraform.tfvars', text: tfvarsContent
+                    sh 'mv terraform.tfvars /var/lib/jenkins/workspace/pipeline/depi-project/3-Tire-Architecture-Aws-Infrastructer-/terraform.tfvars'
+                }
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                sh '''cd /var/lib/jenkins/workspace/pipeline/depi-project/3-Tire-Architecture-Aws-Infrastructer-
+                      terraform init
+                '''
+   
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                sh '''cd /var/lib/jenkins/workspace/pipeline/depi-project/3-Tire-Architecture-Aws-Infrastructer-
+                      terraform plan 
+                '''
+                
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                sh '''cd /var/lib/jenkins/workspace/pipeline/depi-project/3-Tire-Architecture-Aws-Infrastructer-
+                     terraform apply -auto-approve tfplan
+                '''
+                
+            }
+        }
+    }
+}
